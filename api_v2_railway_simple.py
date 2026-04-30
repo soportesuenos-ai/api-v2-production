@@ -107,81 +107,38 @@ def obtener_google_trends_simulado(query: str) -> dict:
 # ===== SCRAPING ALIEXPRESS (SIMULADO) =====
 
 async def buscar_aliexpress(query: str) -> List[dict]:
-    """Busca productos en AliExpress (SIMULADO)"""
+    """Busca productos reales via SerpAPI Google Shopping"""
+    import httpx
+    api_key = os.environ.get("SERPAPI_KEY", "")
+    if not api_key:
+        return []
     
-    productos_simulados = {
-        "curvy gummies": [
-            {
-                "nombre": "Curvy Gummies Premium - 100 piezas",
-                "precio_usd": 2.15,
-                "competencia": 45,
-                "margen": 78,
-                "reviews": 3240,
-                "vendidos": 12500,
-                "url": "https://www.aliexpress.com/item/1234567890.html"
-            },
-            {
-                "nombre": "Curvy Gummies Deluxe - Pack 200",
-                "precio_usd": 3.50,
-                "competencia": 38,
-                "margen": 72,
-                "reviews": 2890,
-                "vendidos": 8900,
-                "url": "https://www.aliexpress.com/item/1234567891.html"
-            }
-        ],
-        "filtro pelos": [
-            {
-                "nombre": "Filtro Pelos Pack 10",
-                "precio_usd": 3.50,
-                "competencia": 23,
-                "margen": 73,
-                "reviews": 4500,
-                "vendidos": 45000,
-                "url": "https://www.aliexpress.com/item/5000990.html"
-            }
-        ],
-        "termo mate": [
-            {
-                "nombre": "Termo Mate Automático Cebante",
-                "precio_usd": 14.99,
-                "competencia": 18,
-                "margen": 68.5,
-                "reviews": 2100,
-                "vendidos": 28700,
-                "url": "https://www.aliexpress.com/item/4000567.html"
-            }
-        ],
-        "crema limpiadora": [
-            {
-                "nombre": "Crema Limpiadora Extrema 250ml",
-                "precio_usd": 5.20,
-                "competencia": 32,
-                "margen": 75,
-                "reviews": 1850,
-                "vendidos": 16200,
-                "url": "https://www.aliexpress.com/item/3001234.html"
-            }
-        ],
-        "organizador magnético": [
-            {
-                "nombre": "Organizador Magnético Escritorio",
-                "precio_usd": 3.20,
-                "competencia": 28,
-                "margen": 70,
-                "reviews": 920,
-                "vendidos": 5600,
-                "url": "https://www.aliexpress.com/item/2005678.html"
-            }
-        ]
+    url = "https://serpapi.com/search"
+    params = {
+        "engine": "google_shopping",
+        "q": query,
+        "gl": "cl",
+        "hl": "es",
+        "api_key": api_key
     }
     
-    query_lower = query.lower()
-    for key in productos_simulados:
-        if key in query_lower or query_lower in key:
-            return productos_simulados[key]
-    
-    return []
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10)
+            data = response.json()
+        
+        productos = []
+        for item in data.get("shopping_results", [])[:5]:
+            productos.append({
+                "nombre": item.get("title", ""),
+                "precio_usd": item.get("price", ""),
+                "fuente": item.get("source", ""),
+                "url": item.get("link", ""),
+                "thumbnail": item.get("thumbnail", "")
+            })
+        return productos
+    except:
+        return []
 
 # ===== CALCULO STAR PRODUCT =====
 
