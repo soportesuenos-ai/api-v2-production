@@ -92,7 +92,7 @@ async def buscar_serpapi(query: str) -> List[dict]:
                 "nombre":    item.get("title", "Sin nombre"),
                 "precio":    item.get("price", "N/A"),
                 "fuente":    item.get("source", ""),
-                "url":       item.get("link", ""),
+                "url":       item.get("product_link") or item.get("link", ""),
                 "thumbnail": item.get("thumbnail", ""),
             })
         return productos
